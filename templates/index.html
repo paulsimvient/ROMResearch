@@ -1,0 +1,1761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROM Model Tester</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: #2d2d2d;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            border: 1px solid #404040;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 500;
+            color: #ffffff;
+        }
+
+        .section {
+            background: #2d2d2d;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            border: 1px solid #404040;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 15px;
+            color: #ffffff;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #b0b0b0;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #555;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+            background: #1a1a1a;
+            color: #e0e0e0;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #4a90e2;
+            background: #252525;
+        }
+
+        button {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #357abd;
+        }
+
+        button:disabled {
+            background: #555;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .button-secondary {
+            background: #6c757d;
+        }
+
+        .button-secondary:hover {
+            background: #5a6268;
+        }
+
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .status-success {
+            background: #1e4d2e;
+            color: #90ee90;
+            border: 1px solid #2d6a3f;
+        }
+
+        .status-error {
+            background: #4d1e1e;
+            color: #ff6b6b;
+            border: 1px solid #6a2d2d;
+        }
+
+        .status-info {
+            background: #1e3d4d;
+            color: #6bb6ff;
+            border: 1px solid #2d5a6a;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        small {
+            color: #b0b0b0;
+        }
+
+        strong {
+            color: #ffffff;
+        }
+
+        .rom-type-card {
+            border: 1px solid #555;
+            padding: 15px;
+            border-radius: 4px;
+            background: #252525;
+            transition: border-color 0.2s;
+        }
+
+        .rom-type-card:hover {
+            border-color: #4a90e2;
+        }
+
+        .rom-type-name {
+            font-weight: 500;
+            margin-bottom: 5px;
+            color: #ffffff;
+        }
+
+        .rom-type-desc {
+            font-size: 12px;
+            color: #b0b0b0;
+        }
+
+        .models-list {
+            max-height: 300px;
+            overflow-y: auto;
+            background: #1a1a1a;
+            border: 1px solid #404040;
+            border-radius: 4px;
+            padding: 10px;
+        }
+
+        .model-item {
+            padding: 10px;
+            border-bottom: 1px solid #404040;
+            font-size: 14px;
+            color: #e0e0e0;
+        }
+
+        .model-item:last-child {
+            border-bottom: none;
+        }
+
+        .plot-container {
+            margin-top: 20px;
+            padding: 15px;
+            background: #1a1a1a;
+            border-radius: 4px;
+            border: 1px solid #404040;
+        }
+
+        canvas {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        code {
+            background: #1a1a1a;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            color: #90ee90;
+            border: 1px solid #404040;
+        }
+
+        .slider-container {
+            margin: 15px 0;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: #404040;
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #4a90e2;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            background: #4a90e2;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+
+        .fom-template-card {
+            border: 1px solid #555;
+            padding: 15px;
+            border-radius: 4px;
+            background: #252525;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .fom-template-card:hover {
+            border-color: #4a90e2;
+            background: #2a2a2a;
+        }
+
+        .fom-template-card.active {
+            border-color: #4a90e2;
+            background: #2a3a4a;
+        }
+
+        .fom-template-name {
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 5px;
+        }
+
+        .fom-template-desc {
+            font-size: 12px;
+            color: #b0b0b0;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>ROM Orchestration System</h1>
+            <p style="color: #aaa; margin-top: 10px;">Select FOM type, set complexity and detail level, then click RUN to generate and compare all ROM techniques</p>
+        </header>
+
+        <div class="section">
+            <div class="section-title">Configure FOM and Run Orchestration</div>
+            <div class="form-group">
+                <label>FOM Type</label>
+                <select id="fom-type" style="font-size: 16px; padding: 12px;">
+                    <option value="">Select FOM type...</option>
+                    <option value="HeatEquation">Heat Equation (2D Diffusion)</option>
+                    <option value="BurgersEquation">Burgers' Equation (Nonlinear Advection-Diffusion)</option>
+                    <option value="CoupledOscillators">Coupled Oscillators (Nonlinear Dynamics)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Complexity Level: <span id="complexity-value">5</span> (1-9)</label>
+                <input type="range" id="complexity-slider" min="1" max="9" value="5" step="1" 
+                       oninput="document.getElementById('complexity-value').textContent = this.value"
+                       style="width: 100%; padding: 0;">
+                <div style="display: flex; justify-content: space-between; font-size: 11px; color: #888; margin-top: 5px;">
+                    <span>Low (1)</span>
+                    <span>Medium (5)</span>
+                    <span>High (9)</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Detail Level: <span id="detail-value">5</span> (1-9)</label>
+                <input type="range" id="detail-slider" min="1" max="9" value="5" step="1"
+                       oninput="document.getElementById('detail-value').textContent = this.value"
+                       style="width: 100%; padding: 0;">
+                <div style="display: flex; justify-content: space-between; font-size: 11px; color: #888; margin-top: 5px;">
+                    <span>Coarse (1)</span>
+                    <span>Medium (5)</span>
+                    <span>Fine (9)</span>
+                </div>
+            </div>
+            <div class="form-group" style="margin-top: 25px; display: flex; gap: 10px;">
+                <button id="run-button" onclick="window.runOrchestration()" 
+                        style="flex: 1; padding: 15px; font-size: 16px; font-weight: 500; background: #4a90e2;">
+                    RUN
+                </button>
+                <button id="stop-button" onclick="window.stopOrchestration()" 
+                        style="flex: 1; padding: 15px; font-size: 16px; font-weight: 500; background: #ff6b6b; display: none;">
+                    STOP
+                </button>
+            </div>
+            <div style="margin-top: 15px; padding: 15px; background: #2a2a2a; border-radius: 4px; border-left: 4px solid #4a90e2;">
+                <div style="font-weight: bold; margin-bottom: 8px;">What happens next:</div>
+                <div style="font-size: 0.9em; color: #aaa; line-height: 1.6;">
+                    ✓ System creates FOM with selected type and complexity<br>
+                    ✓ Generates training snapshots from your FOM<br>
+                    ✓ Creates and trains all ROM types (DMD, Koopman, Neural Network, Autoencoder, EZyRB)<br>
+                    ✓ Runs comparison tests against the FOM<br>
+                    ✓ Displays performance metrics and comparison graphs
+                </div>
+            </div>
+            <div id="orchestrate-progress" style="margin-top: 15px; display: block;">
+                <div style="background: #333; border-radius: 4px; padding: 10px; margin-bottom: 15px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span id="orchestrate-progress-text" style="color: #aaa;">Ready to run...</span>
+                        <span id="orchestrate-progress-percent" style="color: #aaa;">0%</span>
+                    </div>
+                    <div style="background: #222; height: 20px; border-radius: 10px; overflow: hidden;">
+                        <div id="orchestrate-progress-bar" style="background: #4a90e2; height: 100%; width: 0%; transition: width 0.3s;"></div>
+                    </div>
+                </div>
+                <div id="rom-progress-container" style="display: grid; gap: 10px; min-height: 100px;">
+                    <div style="text-align: center; color: #666; padding: 20px;">
+                        Configure FOM type, complexity, and detail level above, then click RUN
+                    </div>
+                </div>
+            </div>
+            <div class="section" style="margin-top: 20px;">
+                <div class="section-title">Debug Console</div>
+                <div id="debug-console" style="background: #1a1a1a; border: 1px solid #333; border-radius: 4px; padding: 15px; height: 300px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 12px; color: #0f0; line-height: 1.6;">
+                    <div style="color: #666;">[System] Ready. Configure FOM and click RUN to start...</div>
+                </div>
+                <button onclick="clearDebugConsole()" style="margin-top: 10px; padding: 8px 15px; background: #444; color: #fff; border: none; border-radius: 4px; cursor: pointer;">Clear Console</button>
+            </div>
+            <div id="orchestrate-results" style="margin-top: 20px; display: none; scroll-margin-top: 20px;">
+                <div class="section-title" style="margin-bottom: 15px;">Comparison Results</div>
+                <div id="orchestrate-metrics" style="margin-bottom: 20px;"></div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                    <div>
+                        <canvas id="orchestrate-trajectory-chart"></canvas>
+                    </div>
+                    <div>
+                        <canvas id="orchestrate-error-chart"></canvas>
+                    </div>
+                </div>
+                <div>
+                    <canvas id="orchestrate-comparison-chart"></canvas>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script>
+        let trainingData = null;
+        let chart = null;
+
+        async function loadROMTypes() {
+            try {
+                const response = await fetch('/api/rom-types');
+                const types = await response.json();
+                const container = document.getElementById('rom-types');
+                const select = document.getElementById('create-rom-type');
+                
+                container.innerHTML = '';
+                select.innerHTML = '<option value="">Select ROM type...</option>';
+                
+                let defaultType = 'Koopman';
+                let hasKoopman = false;
+                
+                for (const [type, info] of Object.entries(types)) {
+                    const card = document.createElement('div');
+                    card.className = 'rom-type-card';
+                    card.innerHTML = `
+                        <div class="rom-type-name">${type}</div>
+                        <div class="rom-type-desc">${info.description}</div>
+                    `;
+                    container.appendChild(card);
+                    
+                    const option = document.createElement('option');
+                    option.value = type;
+                    option.textContent = type;
+                    if (type === 'Koopman') {
+                        hasKoopman = true;
+                    }
+                    select.appendChild(option);
+                }
+                
+                // Auto-fill with default type (Koopman if available, otherwise first type)
+                if (!hasKoopman && Object.keys(types).length > 0) {
+                    defaultType = Object.keys(types)[0];
+                }
+                if (defaultType && Object.keys(types).includes(defaultType)) {
+                    select.value = defaultType;
+                    autoFillROMDefaults(true);
+                }
+            } catch (error) {
+                console.error('Error loading ROM types:', error);
+            }
+        }
+
+
+        async function generateSnapshots() {
+            const fomId = document.getElementById('snapshot-fom-id').value;
+            const nSnapshots = parseInt(document.getElementById('snapshot-count').value);
+            const tEndText = document.getElementById('snapshot-t-end').value;
+            
+            if (!fomId) {
+                showStatus('snapshot-status', 'Please select a FOM', 'error');
+                return;
+            }
+            
+            let tEnd = null;
+            if (tEndText) {
+                tEnd = parseFloat(tEndText);
+            }
+            
+            try {
+                const response = await fetch('/api/generate-snapshots', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        fom_id: fomId,
+                        n_snapshots: nSnapshots,
+                        t_end: tEnd
+                    })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    trainingData = result.data;
+                    showStatus('snapshot-status', `Generated ${result.shape[1]} snapshots from FOM (${result.shape[0]} DOF)`, 'success');
+                } else {
+                    showStatus('snapshot-status', `Error: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                showStatus('snapshot-status', `Error: ${error.message}`, 'error');
+            }
+        }
+
+
+        function autoFillROMDefaults(forceFill = false, updateParamsOnly = false) {
+            const romType = document.getElementById('create-rom-type').value;
+            if (!romType) return;
+            
+            // Auto-fill Model ID (always fill, user can change)
+            const modelIdInput = document.getElementById('create-model-id');
+            if (forceFill || (!updateParamsOnly && !modelIdInput.value)) {
+                const romTypeLower = romType.toLowerCase();
+                const timestamp = Date.now().toString().slice(-4);
+                modelIdInput.value = `${romTypeLower}_${timestamp}`;
+            }
+            
+            // Auto-fill Name (always fill, user can change)
+            const nameInput = document.getElementById('create-name');
+            if (forceFill || (!updateParamsOnly && !nameInput.value)) {
+                nameInput.value = `${romType} Model`;
+            }
+            
+            // Auto-fill Parameters based on ROM type (always update when type changes)
+            const paramsInput = document.getElementById('create-params');
+            if (forceFill || updateParamsOnly || !paramsInput.value.trim()) {
+                let defaultParams = {};
+                
+                switch(romType) {
+                    case 'DMD':
+                        defaultParams = {"rank": 10, "implementation": "numpy"};
+                        break;
+                    case 'Koopman':
+                        defaultParams = {"n_modes": 15};
+                        break;
+                    case 'NeuralNetwork':
+                        defaultParams = {};
+                        break;
+                    case 'Autoencoder':
+                        defaultParams = {"latent_dim": 20};
+                        break;
+                    case 'EZyRB':
+                        defaultParams = {"pod_rank": 10, "interpolator_type": "RBF"};
+                        break;
+                    default:
+                        defaultParams = {};
+                }
+                
+                paramsInput.value = JSON.stringify(defaultParams, null, 2);
+            }
+        }
+
+        async function createROM() {
+            const romType = document.getElementById('create-rom-type').value;
+            const modelId = document.getElementById('create-model-id').value;
+            const name = document.getElementById('create-name').value;
+            const paramsText = document.getElementById('create-params').value;
+            
+            if (!romType || !modelId) {
+                showStatus('create-status', 'Please fill in ROM type and Model ID', 'error');
+                return;
+            }
+            
+            let params = {};
+            if (paramsText) {
+                try {
+                    params = JSON.parse(paramsText);
+                } catch (e) {
+                    showStatus('create-status', 'Invalid JSON in parameters', 'error');
+                    return;
+                }
+            }
+            
+            try {
+                const response = await fetch('/api/create-rom', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        rom_type: romType,
+                        model_id: modelId,
+                        name: name || `${romType} Model`,
+                        params: params
+                    })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    showStatus('create-status', `ROM created: ${modelId}`, 'success');
+                    refreshModels();
+                    updateModelSelects();
+                } else {
+                    showStatus('create-status', `Error: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                showStatus('create-status', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function generateData() {
+            const nFeatures = parseInt(document.getElementById('data-features').value);
+            const nSamples = parseInt(document.getElementById('data-samples').value);
+            
+            try {
+                const response = await fetch('/api/generate-data', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        n_features: nFeatures,
+                        n_samples: nSamples
+                    })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    trainingData = result.data;
+                    showStatus('data-status', `Generated data: ${result.shape[0]} features x ${result.shape[1]} samples`, 'success');
+                } else {
+                    showStatus('data-status', `Error: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                showStatus('data-status', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function fitModel() {
+            const modelId = document.getElementById('fit-model-id').value;
+            const paramsText = document.getElementById('fit-parameters').value;
+            
+            if (!modelId) {
+                showStatus('fit-status', 'Please select a model', 'error');
+                return;
+            }
+            
+            if (!trainingData) {
+                showStatus('fit-status', 'Please generate training data first', 'error');
+                return;
+            }
+            
+            let parameters = null;
+            if (paramsText) {
+                try {
+                    parameters = JSON.parse(paramsText);
+                } catch (e) {
+                    // Try using stored parameters from parametric sweep
+                    if (window.trainingParameters) {
+                        parameters = window.trainingParameters;
+                    } else {
+                        showStatus('fit-status', 'Invalid JSON in parameters', 'error');
+                        return;
+                    }
+                }
+            } else if (window.trainingParameters) {
+                // Auto-use parameters from parametric sweep
+                parameters = window.trainingParameters;
+            }
+            
+            try {
+                const body = {
+                    model_id: modelId,
+                    training_data: trainingData
+                };
+                if (parameters !== null) {
+                    body.parameters = parameters;
+                }
+                
+                const response = await fetch('/api/fit-rom', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(body)
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    showStatus('fit-status', `Model fitted successfully`, 'success');
+                } else {
+                    showStatus('fit-status', `Error: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                showStatus('fit-status', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function simulate() {
+            const modelId = document.getElementById('sim-model-id').value;
+            const x0Text = document.getElementById('sim-x0').value;
+            const muText = document.getElementById('sim-mu').value;
+            const nSteps = parseInt(document.getElementById('sim-steps').value);
+            
+            if (!modelId) {
+                showStatus('sim-status', 'Please select a model', 'error');
+                return;
+            }
+            
+            let x0 = null;
+            let mu = null;
+            
+            // Parse initial condition (for non-parametric ROMs)
+            if (x0Text) {
+                try {
+                    if (x0Text.trim().startsWith('[')) {
+                        x0 = JSON.parse(x0Text);
+                    } else {
+                        x0 = x0Text.split(',').map(x => parseFloat(x.trim())).filter(x => !isNaN(x));
+                    }
+                } catch (e) {
+                    showStatus('sim-status', 'Invalid initial condition format', 'error');
+                    return;
+                }
+            }
+            
+            // Parse parameters (for EZyRB)
+            if (muText) {
+                try {
+                    mu = JSON.parse(muText);
+                } catch (e) {
+                    showStatus('sim-status', 'Invalid parameter format (use JSON array)', 'error');
+                    return;
+                }
+            }
+            
+            if (!x0 && !mu) {
+                showStatus('sim-status', 'Please provide initial condition or parameters', 'error');
+                return;
+            }
+            
+            try {
+                const body = {
+                    model_id: modelId,
+                    n_steps: nSteps
+                };
+                if (x0) body.x0 = x0;
+                if (mu) body.mu = mu;
+                
+                const response = await fetch('/api/simulate', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(body)
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    showStatus('sim-status', `Simulation completed: ${result.shape[0]} features x ${result.shape[1]} steps`, 'success');
+                    plotResults(result.result);
+                } else {
+                    showStatus('sim-status', `Error: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                showStatus('sim-status', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        function plotResults(data) {
+            const container = document.getElementById('plot-container');
+            container.classList.remove('hidden');
+            
+            const canvas = document.getElementById('plot-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            const nFeatures = data.length;
+            const nSteps = data[0].length;
+            
+            const datasets = [];
+            const colors = ['#4a90e2', '#50c878', '#ff6b6b', '#ffa500', '#9b59b6', '#1abc9c'];
+            
+            for (let i = 0; i < Math.min(nFeatures, 6); i++) {
+                datasets.push({
+                    label: `Feature ${i}`,
+                    data: data[i],
+                    borderColor: colors[i % colors.length],
+                    backgroundColor: colors[i % colors.length] + '20',
+                    tension: 0.1
+                });
+            }
+            
+            if (chart) {
+                chart.destroy();
+            }
+            
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: nSteps}, (_, i) => i),
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        y: {
+                            beginAtZero: false
+                        }
+                    }
+                }
+            });
+        }
+
+        async function refreshModels() {
+            try {
+                const response = await fetch('/api/models');
+                const models = await response.json();
+                
+                const container = document.getElementById('models-list');
+                container.innerHTML = '';
+                
+                if (Object.keys(models).length === 0) {
+                    container.innerHTML = '<div class="model-item">No models registered</div>';
+                } else {
+                    for (const [id, model] of Object.entries(models)) {
+                        const item = document.createElement('div');
+                        item.className = 'model-item';
+                        item.innerHTML = `
+                            <strong>${id}</strong>: ${model.name} (${model.type})<br>
+                            <small>Method: ${model.metadata.method || 'N/A'}</small>
+                        `;
+                        container.appendChild(item);
+                    }
+                }
+                
+                updateModelSelects();
+                updateFOMSelects();
+            } catch (error) {
+                console.error('Error refreshing models:', error);
+            }
+        }
+
+        function updateModelSelects() {
+            fetch('/api/models')
+                .then(r => r.json())
+                .then(models => {
+                    const selects = ['fit-model-id', 'sim-model-id', 'compare-rom-id'];
+                    selects.forEach(selectId => {
+                        const select = document.getElementById(selectId);
+                        if (!select) return;
+                        const current = select.value;
+                        select.innerHTML = '<option value="">Select model...</option>';
+                        for (const id of Object.keys(models)) {
+                            // Only show ROMs in fit-model-id and compare-rom-id dropdowns
+                            if ((selectId === 'fit-model-id' || selectId === 'compare-rom-id') && models[id].type !== 'ROM') {
+                                continue;
+                            }
+                            
+                            const option = document.createElement('option');
+                            option.value = id;
+                            const typeLabel = models[id].type === 'FOM' ? ' [FOM]' : ' [ROM]';
+                            option.textContent = `${id}: ${models[id].name}${typeLabel}`;
+                            select.appendChild(option);
+                        }
+                        if (current && Object.keys(models).includes(current)) {
+                            select.value = current;
+                        }
+                    });
+                });
+        }
+
+        function showStatus(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.className = `status status-${type}`;
+            element.textContent = message;
+            element.style.display = 'block';
+        }
+
+        async function generateParametricSnapshots() {
+            const fomId = document.getElementById('sweep-fom-id').value;
+            const nParams = parseInt(document.getElementById('sweep-n-params').value);
+            const paramMin = parseFloat(document.getElementById('sweep-param-min').value);
+            const paramMax = parseFloat(document.getElementById('sweep-param-max').value);
+            
+            if (!fomId) {
+                showStatus('sweep-status', 'Please select a FOM', 'error');
+                return;
+            }
+            
+            try {
+                showStatus('sweep-status', 'Generating parametric snapshots...', 'info');
+                const response = await fetch('/api/generate-parametric-snapshots', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        fom_id: fomId,
+                        n_parameters: nParams,
+                        param_min: paramMin,
+                        param_max: paramMax,
+                        n_steps_per_param: 50
+                    })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    trainingData = result.data;
+                    // Store parameters for EZyRB
+                    window.trainingParameters = result.parameters;
+                    showStatus('sweep-status', 
+                        `Generated ${result.shape[1]} snapshots from ${nParams} parameter values (${result.shape[0]} DOF)`, 
+                        'success');
+                } else {
+                    showStatus('sweep-status', `Error: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                showStatus('sweep-status', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function compareFOMROM() {
+            const fomId = document.getElementById('compare-fom-id').value;
+            const romId = document.getElementById('compare-rom-id').value;
+            const paramsText = document.getElementById('compare-params').value;
+            const nSteps = parseInt(document.getElementById('compare-steps').value);
+            
+            if (!fomId || !romId) {
+                showStatus('compare-status', 'Please select both FOM and ROM', 'error');
+                return;
+            }
+            
+            let testParams = null;
+            if (paramsText) {
+                try {
+                    testParams = JSON.parse(paramsText);
+                } catch (e) {
+                    showStatus('compare-status', 'Invalid JSON in test parameters', 'error');
+                    return;
+                }
+            }
+            
+            try {
+                showStatus('compare-status', 'Running comparison...', 'info');
+                const response = await fetch('/api/compare-fom-rom', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        fom_id: fomId,
+                        rom_id: romId,
+                        test_parameters: testParams,
+                        n_steps: nSteps
+                    })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    const summary = result.summary;
+                    showStatus('compare-status', 
+                        `Comparison complete! Avg relative error: ${(summary.avg_relative_error * 100).toFixed(2)}%`, 
+                        'success');
+                    
+                    // Plot comparison
+                    plotComparison(result.comparisons);
+                    plotErrorMetrics(result.errors);
+                } else {
+                    showStatus('compare-status', `Error: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                showStatus('compare-status', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        function plotComparison(comparisons) {
+            const container = document.getElementById('compare-plot-container');
+            container.classList.remove('hidden');
+            
+            const canvas = document.getElementById('compare-plot-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Plot first few features for first comparison
+            if (comparisons.length === 0) return;
+            
+            const firstComp = comparisons[0];
+            if (!firstComp.fom_result || !firstComp.rom_result) return;
+            
+            const nFeatures = Math.min(firstComp.fom_result.length, 6);
+            const nSteps = firstComp.fom_result[0].length;
+            
+            const datasets = [];
+            const colors = ['#4a90e2', '#50c878', '#ff6b6b', '#ffa500', '#9b59b6', '#1abc9c'];
+            
+            // Plot FOM results (solid lines)
+            for (let i = 0; i < nFeatures; i++) {
+                datasets.push({
+                    label: `FOM Feature ${i}`,
+                    data: firstComp.fom_result[i],
+                    borderColor: colors[i % colors.length],
+                    backgroundColor: colors[i % colors.length] + '40',
+                    borderWidth: 2,
+                    tension: 0.1
+                });
+            }
+            
+            // Plot ROM results (dashed lines)
+            for (let i = 0; i < nFeatures; i++) {
+                datasets.push({
+                    label: `ROM Feature ${i}`,
+                    data: firstComp.rom_result[i],
+                    borderColor: colors[i % colors.length],
+                    backgroundColor: 'transparent',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    tension: 0.1
+                });
+            }
+            
+            if (window.compareChart) {
+                window.compareChart.destroy();
+            }
+            
+            window.compareChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: nSteps}, (_, i) => i),
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        y: {
+                            beginAtZero: false
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: `FOM vs ROM Comparison (Parameter: ${firstComp.parameter})`
+                        }
+                    }
+                }
+            });
+        }
+
+        function plotErrorMetrics(errors) {
+            const container = document.getElementById('error-plot-container');
+            container.classList.remove('hidden');
+            
+            const canvas = document.getElementById('error-plot-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            const params = errors.map(e => e.parameter);
+            const relativeErrors = errors.map(e => e.relative_error * 100); // Convert to percentage
+            const mseErrors = errors.map(e => e.mse);
+            
+            if (window.errorChart) {
+                window.errorChart.destroy();
+            }
+            
+            window.errorChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: params.map(p => p.toFixed(2)),
+                    datasets: [
+                        {
+                            label: 'Relative Error (%)',
+                            data: relativeErrors,
+                            borderColor: '#ff6b6b',
+                            backgroundColor: '#ff6b6b20',
+                            yAxisID: 'y',
+                            tension: 0.1
+                        },
+                        {
+                            label: 'MSE',
+                            data: mseErrors,
+                            borderColor: '#4a90e2',
+                            backgroundColor: '#4a90e240',
+                            yAxisID: 'y1',
+                            tension: 0.1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Relative Error (%)'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'MSE'
+                            },
+                            grid: {
+                                drawOnChartArea: false
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'ROM Error Metrics vs Parameter'
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateFOMSelects() {
+            return fetch('/api/models')
+                .then(r => r.json())
+                .then(models => {
+                    const select = document.getElementById('orchestrate-fom-id');
+                    if (!select) return;
+                    const current = select.value;
+                    select.innerHTML = '<option value="">Select a FOM model...</option>';
+                    let fomCount = 0;
+                    for (const [id, model] of Object.entries(models)) {
+                        if (model.type === 'FOM') {
+                            const option = document.createElement('option');
+                            option.value = id;
+                            option.textContent = `${id}: ${model.name}`;
+                            select.appendChild(option);
+                            fomCount++;
+                        }
+                    }
+                    debugLog(`[System] Found ${fomCount} FOM models available`, 'info');
+                    if (current && Object.keys(models).includes(current)) {
+                        select.value = current;
+                    }
+                })
+                .catch(error => {
+                    debugLog(`[System] ERROR loading FOM models: ${error.message}`, 'error');
+                });
+        }
+
+        let orchestrationJobId = null;
+        let orchestrationPollInterval = null;
+        let orchestrationCharts = {
+            trajectory: null,
+            error: null,
+            comparison: null
+        };
+        let isOrchestrating = false;
+
+        function debugLog(message, type = 'info') {
+            const console = document.getElementById('debug-console');
+            if (!console) return;
+            
+            const timestamp = new Date().toLocaleTimeString();
+            const colors = {
+                'info': '#4a90e2',
+                'success': '#50c878',
+                'error': '#ff6b6b',
+                'warning': '#ffa500',
+                'system': '#666'
+            };
+            const color = colors[type] || '#fff';
+            
+            const logEntry = document.createElement('div');
+            logEntry.style.color = color;
+            logEntry.innerHTML = `[${timestamp}] ${message}`;
+            console.appendChild(logEntry);
+            
+            // Auto-scroll to bottom
+            console.scrollTop = console.scrollHeight;
+            
+            // Keep only last 100 lines
+            while (console.children.length > 100) {
+                console.removeChild(console.firstChild);
+            }
+        }
+
+        function clearDebugConsole() {
+            const console = document.getElementById('debug-console');
+            if (console) {
+                console.innerHTML = '<div style="color: #666;">[System] Console cleared.</div>';
+            }
+        }
+        window.runOrchestration = async function() {
+            const fomType = document.getElementById('fom-type').value;
+            const complexity = parseInt(document.getElementById('complexity-slider').value);
+            const detail = parseInt(document.getElementById('detail-slider').value);
+            
+            if (!fomType) {
+                debugLog('ERROR: Please select a FOM type', 'error');
+                alert('Please select a FOM type');
+                return;
+            }
+            
+            if (isOrchestrating) {
+                debugLog('ERROR: Orchestration already in progress', 'error');
+                return;
+            }
+            
+            // Get button references at function scope
+            const runButton = document.getElementById('run-button');
+            const stopButton = document.getElementById('stop-button');
+            
+            if (runButton) {
+                runButton.disabled = true;
+                runButton.textContent = 'Running...';
+                runButton.style.background = '#666';
+            }
+            if (stopButton) {
+                stopButton.style.display = 'block';
+            }
+            
+            debugLog(`Creating FOM: Type=${fomType}, Complexity=${complexity}, Detail=${detail}`, 'info');
+            document.getElementById('orchestrate-progress-text').textContent = 'Creating FOM...';
+            document.getElementById('orchestrate-progress-text').style.color = '#4a90e2';
+            
+            try {
+                // Create FOM on-demand
+                const createResponse = await fetch('/api/create-fom-on-demand', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        fom_type: fomType,
+                        complexity: complexity,
+                        detail: detail
+                    })
+                });
+                
+                if (!createResponse.ok) {
+                    const errorData = await createResponse.json();
+                    throw new Error(errorData.error || 'Failed to create FOM');
+                }
+                
+                const createData = await createResponse.json();
+                const fomId = createData.model_id;
+                
+                debugLog(`FOM created: ${fomId}`, 'success');
+                debugLog(`Starting orchestration...`, 'system');
+                
+                // Start orchestration with the created FOM
+                await startOrchestrationWithFOM(fomId);
+                
+            } catch (error) {
+                debugLog(`ERROR: ${error.message}`, 'error');
+                document.getElementById('orchestrate-progress-text').textContent = `Error: ${error.message}`;
+                document.getElementById('orchestrate-progress-text').style.color = '#ff6b6b';
+                
+                // Re-enable RUN button and hide STOP button
+                const runBtn = document.getElementById('run-button');
+                const stopBtn = document.getElementById('stop-button');
+                if (runBtn) {
+                    runBtn.disabled = false;
+                    runBtn.textContent = 'RUN';
+                    runBtn.style.background = '#4a90e2';
+                }
+                if (stopBtn) {
+                    stopBtn.style.display = 'none';
+                }
+            }
+        }
+
+        window.stopOrchestration = function() {
+            if (orchestrationPollInterval) {
+                clearInterval(orchestrationPollInterval);
+                orchestrationPollInterval = null;
+            }
+            isOrchestrating = false;
+            debugLog('Orchestration stopped by user', 'warning');
+            document.getElementById('orchestrate-progress-text').textContent = 'Orchestration stopped by user';
+            document.getElementById('orchestrate-progress-text').style.color = '#ff6b6b';
+            
+            // Re-enable RUN button and hide STOP button
+            const runButton = document.getElementById('run-button');
+            const stopButton = document.getElementById('stop-button');
+            if (runButton) {
+                runButton.disabled = false;
+                runButton.textContent = 'RUN';
+                runButton.style.background = '#4a90e2';
+            }
+            if (stopButton) {
+                stopButton.style.display = 'none';
+            }
+        }
+
+        async function startOrchestrationWithFOM(fomId) {
+            if (!fomId) {
+                debugLog('ERROR: No FOM ID provided', 'error');
+                return;
+            }
+            
+            // Use default values for automatic orchestration
+            const nSnapshots = 200;
+            const tEnd = 10.0;
+            const testSteps = 50;
+            
+            debugLog(`Starting orchestration for FOM: ${fomId}`, 'info');
+            debugLog(`Parameters: ${nSnapshots} snapshots, t_end=${tEnd}, test_steps=${testSteps}`, 'system');
+            
+            try {
+                debugLog('Sending orchestration request to server...', 'system');
+                const response = await fetch('/api/orchestrate', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        fom_id: fomId,
+                        n_snapshots: nSnapshots,
+                        t_end: tEnd,
+                        test_n_steps: testSteps
+                    })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    orchestrationJobId = result.job_id;
+                    isOrchestrating = true;
+                    
+                    // Keep button disabled while orchestration is running, show STOP button
+                    const runButton = document.getElementById('run-button');
+                    const stopButton = document.getElementById('stop-button');
+                    if (runButton) {
+                        runButton.disabled = true;
+                        runButton.textContent = 'Running...';
+                        runButton.style.background = '#666';
+                    }
+                    if (stopButton) {
+                        stopButton.style.display = 'block';
+                    }
+                    debugLog(`Orchestration job started: ${orchestrationJobId}`, 'success');
+                    debugLog('Starting status polling...', 'system');
+                    
+                    document.getElementById('orchestrate-progress-text').textContent = 'Orchestration started...';
+                    document.getElementById('orchestrate-progress-text').style.color = '#4a90e2';
+                    document.getElementById('orchestrate-progress').style.display = 'block';
+                    document.getElementById('orchestrate-results').style.display = 'none';
+                    
+                    // Initialize ROM progress meters with empty state
+                    updateROMProgressMeters({});
+                    
+                    // Clear previous results
+                    document.getElementById('orchestrate-metrics').innerHTML = '';
+                    if (orchestrationCharts.trajectory) {
+                        orchestrationCharts.trajectory.destroy();
+                        orchestrationCharts.trajectory = null;
+                    }
+                    if (orchestrationCharts.error) {
+                        orchestrationCharts.error.destroy();
+                        orchestrationCharts.error = null;
+                    }
+                    if (orchestrationCharts.comparison) {
+                        orchestrationCharts.comparison.destroy();
+                        orchestrationCharts.comparison = null;
+                    }
+                    
+                    // Start polling for status (more frequent updates)
+                    if (orchestrationPollInterval) {
+                        clearInterval(orchestrationPollInterval);
+                    }
+                    orchestrationPollInterval = setInterval(pollOrchestrationStatus, 1000); // Poll every 1 second
+                    window.pollErrorCount = 0; // Reset error counter
+                    pollOrchestrationStatus(); // Immediate check
+                } else {
+                    debugLog(`ERROR: Failed to start orchestration - ${result.error}`, 'error');
+                    document.getElementById('orchestrate-progress-text').textContent = `Error: ${result.error}`;
+                    document.getElementById('orchestrate-progress-text').style.color = '#ff6b6b';
+                    isOrchestrating = false;
+                }
+            } catch (error) {
+                debugLog(`ERROR: Exception during orchestration start - ${error.message}`, 'error');
+                document.getElementById('orchestrate-progress-text').textContent = `Error: ${error.message}`;
+                document.getElementById('orchestrate-progress-text').style.color = '#ff6b6b';
+                isOrchestrating = false;
+                
+                // Re-enable RUN button and hide STOP button
+                const runButton = document.getElementById('run-button');
+                const stopButton = document.getElementById('stop-button');
+                if (runButton) {
+                    runButton.disabled = false;
+                    runButton.textContent = 'RUN';
+                    runButton.style.background = '#4a90e2';
+                }
+                if (stopButton) {
+                    stopButton.style.display = 'none';
+                }
+            }
+        }
+
+        async function pollOrchestrationStatus() {
+            if (!orchestrationJobId) return;
+            
+            try {
+                const response = await fetch(`/api/orchestrate/${orchestrationJobId}`);
+                const result = await response.json();
+                
+                if (!result.success) {
+                    clearInterval(orchestrationPollInterval);
+                    orchestrationPollInterval = null;
+                    isOrchestrating = false;
+                    debugLog(`ERROR: Status polling failed - ${result.error}`, 'error');
+                    document.getElementById('orchestrate-progress-text').textContent = `Error: ${result.error}`;
+                    document.getElementById('orchestrate-progress-text').style.color = '#ff6b6b';
+                    
+                    // Re-enable RUN button and hide STOP button
+                    const runButton = document.getElementById('run-button');
+                    const stopButton = document.getElementById('stop-button');
+                    if (runButton) {
+                        runButton.disabled = false;
+                        runButton.textContent = 'RUN';
+                        runButton.style.background = '#4a90e2';
+                    }
+                    if (stopButton) {
+                        stopButton.style.display = 'none';
+                    }
+                    return;
+                }
+                
+                const status = result.status;
+                const progress = (status.progress * 100).toFixed(1);
+                
+                // Log status changes
+                const currentStep = status.current_step;
+                if (currentStep !== document.getElementById('orchestrate-progress-text').textContent) {
+                    debugLog(`Status: ${currentStep} (${progress}%)`, 'info');
+                }
+                
+                document.getElementById('orchestrate-progress-text').textContent = currentStep;
+                document.getElementById('orchestrate-progress-percent').textContent = `${progress}%`;
+                document.getElementById('orchestrate-progress-bar').style.width = `${progress}%`;
+                
+                // Update individual ROM progress meters and log ROM status
+                if (status.rom_progress) {
+                    for (const [romType, romStatus] of Object.entries(status.rom_progress)) {
+                        if (romStatus.step && romStatus.step !== 'Waiting...' && romStatus.step !== 'Initializing') {
+                            const romProgress = (romStatus.progress * 100).toFixed(0);
+                            debugLog(`  [${romType}] ${romStatus.step} (${romProgress}%)`, romStatus.status === 'completed' ? 'success' : romStatus.status === 'error' ? 'error' : 'info');
+                        }
+                    }
+                }
+                updateROMProgressMeters(status.rom_progress || {});
+                
+                if (status.status === 'completed') {
+                    clearInterval(orchestrationPollInterval);
+                    orchestrationPollInterval = null;
+                    isOrchestrating = false;
+                    debugLog('Orchestration completed successfully!', 'success');
+                    debugLog('Generating comparison results...', 'system');
+                    document.getElementById('orchestrate-progress-text').textContent = 'Orchestration completed!';
+                    document.getElementById('orchestrate-progress-text').style.color = '#50c878';
+                    displayOrchestrationResults(status);
+                } else if (status.status === 'error') {
+                    clearInterval(orchestrationPollInterval);
+                    orchestrationPollInterval = null;
+                    isOrchestrating = false;
+                    debugLog(`ERROR: Orchestration failed - ${status.error}`, 'error');
+                    document.getElementById('orchestrate-progress-text').textContent = `Error: ${status.error}`;
+                    document.getElementById('orchestrate-progress-text').style.color = '#ff6b6b';
+                    
+                    // Re-enable RUN button and hide STOP button
+                    const runButton = document.getElementById('run-button');
+                    const stopButton = document.getElementById('stop-button');
+                    if (runButton) {
+                        runButton.disabled = false;
+                        runButton.textContent = 'RUN';
+                        runButton.style.background = '#4a90e2';
+                    }
+                    if (stopButton) {
+                        stopButton.style.display = 'none';
+                    }
+                } else if (status.status === 'running') {
+                    // Still running - check if it's been too long (timeout after 5 minutes)
+                    const startTime = status.start_time;
+                    if (startTime) {
+                        const elapsed = (Date.now() / 1000) - startTime;
+                        if (elapsed > 300) {  // 5 minutes timeout
+                            debugLog(`WARNING: Orchestration has been running for ${elapsed.toFixed(0)}s. This may indicate a stuck process.`, 'warning');
+                        }
+                    }
+                }
+            } catch (error) {
+                debugLog(`ERROR: Exception during status polling - ${error.message}`, 'error');
+                console.error('Error polling orchestration status:', error);
+                
+                // If we get repeated errors, stop polling
+                if (!window.pollErrorCount) window.pollErrorCount = 0;
+                window.pollErrorCount++;
+                if (window.pollErrorCount > 10) {
+                    clearInterval(orchestrationPollInterval);
+                    orchestrationPollInterval = null;
+                    isOrchestrating = false;
+                    debugLog('ERROR: Too many polling errors. Stopping orchestration monitoring.', 'error');
+                    
+                    const runButton = document.getElementById('run-button');
+                    const stopButton = document.getElementById('stop-button');
+                    if (runButton) {
+                        runButton.disabled = false;
+                        runButton.textContent = 'RUN';
+                        runButton.style.background = '#4a90e2';
+                    }
+                    if (stopButton) {
+                        stopButton.style.display = 'none';
+                    }
+                }
+            }
+        }
+
+        function updateROMProgressMeters(romProgress) {
+            const container = document.getElementById('rom-progress-container');
+            if (!container) return;
+            
+            // Get available ROM types from the registry
+            const romTypes = Object.keys(romProgress);
+            if (romTypes.length === 0) {
+                // Show placeholder message
+                container.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">Waiting for orchestration to start...</div>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            
+            const statusColors = {
+                'pending': '#666',
+                'running': '#4a90e2',
+                'completed': '#50c878',
+                'error': '#ff6b6b',
+                'skipped': '#ffa500'
+            };
+            
+            for (const [romType, progress] of Object.entries(romProgress)) {
+                const romProgressDiv = document.createElement('div');
+                romProgressDiv.style.cssText = 'background: #2a2a2a; border-radius: 4px; padding: 12px; border-left: 4px solid ' + (statusColors[progress.status] || '#666') + ';';
+                
+                const progressPercent = (progress.progress * 100).toFixed(0);
+                
+                romProgressDiv.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span style="font-weight: bold; color: #fff;">${romType}</span>
+                        <span style="color: #aaa; font-size: 0.9em;">${progressPercent}%</span>
+                    </div>
+                    <div style="background: #222; height: 16px; border-radius: 8px; overflow: hidden; margin-bottom: 5px;">
+                        <div style="background: ${statusColors[progress.status] || '#666'}; height: 100%; width: ${progressPercent}%; transition: width 0.3s;"></div>
+                    </div>
+                    <div style="font-size: 0.85em; color: #aaa;">${progress.step || 'Initializing...'}</div>
+                `;
+                
+                container.appendChild(romProgressDiv);
+            }
+        }
+
+        function displayOrchestrationResults(status) {
+            debugLog('Displaying results...', 'system');
+            
+            // Count completed ROMs
+            const completedROMs = Object.values(status.rom_results).filter(r => r.status === 'completed').length;
+            const totalROMs = Object.keys(status.rom_results).length;
+            debugLog(`Results: ${completedROMs}/${totalROMs} ROMs completed successfully`, 'success');
+            
+            // Log metrics for each ROM
+            for (const [romType, romData] of Object.entries(status.rom_results)) {
+                if (romData.status === 'completed') {
+                    const mse = (romData.mse != null && !isNaN(romData.mse)) ? romData.mse.toExponential(2) : 'N/A';
+                    const maxError = (romData.max_error != null && !isNaN(romData.max_error)) ? romData.max_error.toExponential(2) : 'N/A';
+                    debugLog(`  [${romType}] MSE: ${mse}, Max Error: ${maxError}`, 'info');
+                } else {
+                    debugLog(`  [${romType}] ${romData.status}: ${romData.error || 'Unknown error'}`, 'error');
+                }
+            }
+            
+            debugLog('Creating visualization charts...', 'system');
+            
+            // Scroll to results section
+            document.getElementById('orchestrate-results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            document.getElementById('orchestrate-results').style.display = 'block';
+            
+            // Display metrics
+            const metricsDiv = document.getElementById('orchestrate-metrics');
+            let metricsHtml = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">';
+            
+            for (const [romType, romData] of Object.entries(status.rom_results)) {
+                if (romData.status === 'completed') {
+                    const mse = (romData.mse != null && !isNaN(romData.mse)) ? romData.mse.toExponential(2) : 'N/A';
+                    const maxError = (romData.max_error != null && !isNaN(romData.max_error)) ? romData.max_error.toExponential(2) : 'N/A';
+                    const meanError = (romData.mean_error != null && !isNaN(romData.mean_error)) ? romData.mean_error.toExponential(2) : 'N/A';
+                    metricsHtml += `
+                        <div style="background: #2a2a2a; padding: 15px; border-radius: 4px; border-left: 4px solid #4a90e2;">
+                            <div style="font-weight: bold; margin-bottom: 8px;">${romType}</div>
+                            <div style="font-size: 0.9em; color: #aaa;">MSE: ${mse}</div>
+                            <div style="font-size: 0.9em; color: #aaa;">Max Error: ${maxError}</div>
+                            <div style="font-size: 0.9em; color: #aaa;">Mean Error: ${meanError}</div>
+                        </div>
+                    `;
+                } else {
+                    metricsHtml += `
+                        <div style="background: #2a2a2a; padding: 15px; border-radius: 4px; border-left: 4px solid #ff6b6b;">
+                            <div style="font-weight: bold; margin-bottom: 8px;">${romType}</div>
+                            <div style="font-size: 0.9em; color: #ff6b6b;">Error: ${romData.error || 'Failed'}</div>
+                        </div>
+                    `;
+                }
+            }
+            metricsHtml += '</div>';
+            metricsDiv.innerHTML = metricsHtml;
+            
+            // Create comparison charts
+            createOrchestrationCharts(status);
+            
+            debugLog('All results displayed successfully!', 'success');
+        }
+
+        function createOrchestrationCharts(status) {
+            const colors = ['#4a90e2', '#50c878', '#ff6b6b', '#ffa500', '#9b59b6', '#1abc9c'];
+            
+            // Trajectory comparison chart
+            const trajectoryCtx = document.getElementById('orchestrate-trajectory-chart').getContext('2d');
+            if (orchestrationCharts.trajectory) {
+                orchestrationCharts.trajectory.destroy();
+            }
+            
+            const trajectoryDatasets = [];
+            let completedROMs = Object.entries(status.rom_results).filter(([_, data]) => data.status === 'completed');
+            
+            if (completedROMs.length > 0) {
+                // Use first completed ROM's snapshots as reference
+                const firstROM = completedROMs[0][1];
+                if (firstROM.snapshots && firstROM.snapshots.length > 0) {
+                    const nSteps = firstROM.snapshots[0].length;
+                    const labels = Array.from({length: nSteps}, (_, i) => i);
+                    
+                    // Add FOM reference (first feature of first snapshot)
+                    trajectoryDatasets.push({
+                        label: 'FOM (Reference)',
+                        data: firstROM.snapshots[0] || [],
+                        borderColor: '#ffffff',
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        borderDash: [5, 5]
+                    });
+                    
+                    // Add ROM predictions
+                    completedROMs.forEach(([romType, romData], idx) => {
+                        if (romData.predictions && romData.predictions.length > 0) {
+                            trajectoryDatasets.push({
+                                label: romType,
+                                data: romData.predictions[0] || [],
+                                borderColor: colors[idx % colors.length],
+                                backgroundColor: colors[idx % colors.length] + '20',
+                                borderWidth: 2
+                            });
+                        }
+                    });
+                }
+            }
+            
+            orchestrationCharts.trajectory = new Chart(trajectoryCtx, {
+                type: 'line',
+                data: {
+                    labels: trajectoryDatasets.length > 0 ? Array.from({length: trajectoryDatasets[0].data.length}, (_, i) => i) : [],
+                    datasets: trajectoryDatasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        title: { display: true, text: 'Trajectory Comparison', color: '#fff' },
+                        legend: { labels: { color: '#fff' } }
+                    },
+                    scales: {
+                        x: { ticks: { color: '#aaa' }, grid: { color: '#333' } },
+                        y: { ticks: { color: '#aaa' }, grid: { color: '#333' } }
+                    }
+                }
+            });
+            
+            // Error comparison chart
+            const errorCtx = document.getElementById('orchestrate-error-chart').getContext('2d');
+            if (orchestrationCharts.error) {
+                orchestrationCharts.error.destroy();
+            }
+            
+            const errorDatasets = [];
+            completedROMs.forEach(([romType, romData], idx) => {
+                if (romData.errors && romData.errors.length > 0) {
+                    const errorData = romData.errors[0] || [];
+                    errorDatasets.push({
+                        label: romType,
+                        data: errorData.map(e => Math.abs(e)),
+                        borderColor: colors[idx % colors.length],
+                        backgroundColor: colors[idx % colors.length] + '20',
+                        borderWidth: 2
+                    });
+                }
+            });
+            
+            orchestrationCharts.error = new Chart(errorCtx, {
+                type: 'line',
+                data: {
+                    labels: errorDatasets.length > 0 ? Array.from({length: errorDatasets[0].data.length}, (_, i) => i) : [],
+                    datasets: errorDatasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        title: { display: true, text: 'Error Comparison', color: '#fff' },
+                        legend: { labels: { color: '#fff' } }
+                    },
+                    scales: {
+                        x: { ticks: { color: '#aaa' }, grid: { color: '#333' } },
+                        y: { ticks: { color: '#aaa' }, grid: { color: '#333' } }
+                    }
+                }
+            });
+            
+            // Metrics comparison chart
+            const comparisonCtx = document.getElementById('orchestrate-comparison-chart').getContext('2d');
+            if (orchestrationCharts.comparison) {
+                orchestrationCharts.comparison.destroy();
+            }
+            
+            const romTypes = [];
+            const mseValues = [];
+            const maxErrorValues = [];
+            
+            completedROMs.forEach(([romType, romData]) => {
+                romTypes.push(romType);
+                // Handle null/NaN values
+                const mse = (romData.mse != null && !isNaN(romData.mse)) ? romData.mse : 0;
+                const maxError = (romData.max_error != null && !isNaN(romData.max_error)) ? romData.max_error : 0;
+                mseValues.push(mse);
+                maxErrorValues.push(maxError);
+            });
+            
+            orchestrationCharts.comparison = new Chart(comparisonCtx, {
+                type: 'bar',
+                data: {
+                    labels: romTypes,
+                    datasets: [
+                        {
+                            label: 'MSE',
+                            data: mseValues,
+                            backgroundColor: '#4a90e2',
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Max Error',
+                            data: maxErrorValues,
+                            backgroundColor: '#ff6b6b',
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        title: { display: true, text: 'ROM Performance Comparison', color: '#fff' },
+                        legend: { labels: { color: '#fff' } }
+                    },
+                    scales: {
+                        x: { ticks: { color: '#aaa' }, grid: { color: '#333' } },
+                        y: { 
+                            type: 'logarithmic',
+                            ticks: { color: '#aaa' }, 
+                            grid: { color: '#333' },
+                            position: 'left'
+                        },
+                        y1: {
+                            type: 'logarithmic',
+                            ticks: { color: '#aaa' },
+                            grid: { color: '#333' },
+                            position: 'right'
+                        }
+                    }
+                }
+            });
+        }
+
+        window.onload = function() {
+            debugLog('[System] Application initialized', 'system');
+            debugLog('[System] Loading available FOM models...', 'system');
+            
+            // Only load FOMs for orchestration
+            updateFOMSelects().then(() => {
+                debugLog('[System] FOM models loaded successfully', 'success');
+            });
+        };
+    </script>
+</body>
+</html>
